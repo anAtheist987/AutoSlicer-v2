@@ -1,0 +1,2 @@
+model=crnn params=2.09M
+step 200/8000 loss 0.3933 (0.29s/step)

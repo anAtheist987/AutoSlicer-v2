@@ -49,7 +49,7 @@ def evaluate_full(model, pairs, device, out_fps=3.125, chunk_out=2048, overlap_o
     all_frame = {"tp": 0, "fp": 0, "fn": 0, "tn": 0}
     ev_pred, ev_true = [], []
     t_offset = 0.0
-    for mel_p, lab_p in pairs:
+    for mel_p, lab_p, *_ in pairs:
         mel = np.load(mel_p, mmap_mode="r")
         lab = np.load(lab_p)
         n_out = len(lab)

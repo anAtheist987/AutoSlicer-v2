@@ -1,0 +1,42 @@
+model=backbone_head params=1.12M
+step 200/10000 loss 0.0675 (0.61s/step)
+step 400/10000 loss 0.0112 (0.59s/step)
+step 600/10000 loss 0.0182 (0.59s/step)
+step 800/10000 loss 0.0043 (0.59s/step)
+step 1000/10000 loss 0.0017 (0.59s/step)
+[val @1000] frame_f1=0.7274 event_f1=0.6154 P/R=0.991/0.575 score=0.6714
+  new best score=0.6714
+step 1200/10000 loss 0.0003 (0.61s/step)
+step 1400/10000 loss 0.0027 (0.61s/step)
+step 1600/10000 loss 0.0002 (0.60s/step)
+step 1800/10000 loss 0.0078 (0.60s/step)
+step 2000/10000 loss 0.0003 (0.60s/step)
+[val @2000] frame_f1=0.7272 event_f1=0.6154 P/R=0.989/0.575 score=0.6713
+step 2200/10000 loss 0.0367 (0.61s/step)
+step 2400/10000 loss 0.0024 (0.61s/step)
+step 2600/10000 loss 0.0003 (0.61s/step)
+step 2800/10000 loss 0.0006 (0.61s/step)
+step 3000/10000 loss 0.0029 (0.60s/step)
+[val @3000] frame_f1=0.7935 event_f1=0.7000 P/R=0.993/0.661 score=0.7468
+  new best score=0.7468
+step 3200/10000 loss 0.0001 (0.61s/step)
+step 3400/10000 loss 0.0003 (0.61s/step)
+step 3600/10000 loss 0.0001 (0.61s/step)
+step 3800/10000 loss 0.0000 (0.61s/step)
+step 4000/10000 loss 0.0002 (0.61s/step)
+[val @4000] frame_f1=0.6953 event_f1=0.5789 P/R=0.997/0.534 score=0.6371
+step 4200/10000 loss 0.0000 (0.61s/step)
+step 4400/10000 loss 0.0001 (0.61s/step)
+step 4600/10000 loss 0.0000 (0.61s/step)
+step 4800/10000 loss 0.0000 (0.61s/step)
+step 5000/10000 loss 0.0010 (0.61s/step)
+[val @5000] frame_f1=0.6956 event_f1=0.5789 P/R=0.994/0.535 score=0.6373
+step 5200/10000 loss 0.0000 (0.61s/step)
+step 5400/10000 loss 0.0019 (0.61s/step)
+step 5600/10000 loss 0.0016 (0.61s/step)
+step 5800/10000 loss 0.0004 (0.61s/step)
+step 6000/10000 loss 0.0000 (0.61s/step)
+[val @6000] frame_f1=0.7892 event_f1=0.7000 P/R=0.997/0.653 score=0.7446
+step 6200/10000 loss 0.0010 (0.61s/step)
+step 6400/10000 loss 0.0000 (0.61s/step)
+step 6600/10000 loss 0.0000 (0.61s/step)

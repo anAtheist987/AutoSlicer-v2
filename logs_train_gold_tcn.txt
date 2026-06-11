@@ -1,0 +1,2 @@
+model=tcn params=3.87M
+step 200/8000 loss 0.1721 (0.33s/step)

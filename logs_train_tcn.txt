@@ -1,0 +1,71 @@
+model=tcn params=3.87M
+step 200/10000 loss 0.1165 (0.30s/step)
+step 400/10000 loss 0.1421 (0.30s/step)
+step 600/10000 loss 0.0461 (0.30s/step)
+step 800/10000 loss 0.1365 (0.30s/step)
+step 1000/10000 loss 0.0628 (0.30s/step)
+[val @1000] frame_f1=0.4010 event_f1=0.2319 P/R=0.270/0.779 score=0.3165
+  new best score=0.3165
+step 1200/10000 loss 0.2139 (0.31s/step)
+step 1400/10000 loss 0.0328 (0.31s/step)
+step 1600/10000 loss 0.0459 (0.31s/step)
+step 1800/10000 loss 0.1096 (0.31s/step)
+step 2000/10000 loss 0.0168 (0.31s/step)
+[val @2000] frame_f1=0.7786 event_f1=0.6190 P/R=0.917/0.676 score=0.6988
+  new best score=0.6988
+step 2200/10000 loss 0.0273 (0.31s/step)
+step 2400/10000 loss 0.0255 (0.32s/step)
+step 2600/10000 loss 0.0025 (0.32s/step)
+step 2800/10000 loss 0.2410 (0.32s/step)
+step 3000/10000 loss 0.0248 (0.32s/step)
+[val @3000] frame_f1=0.7818 event_f1=0.6512 P/R=0.869/0.711 score=0.7165
+  new best score=0.7165
+step 3200/10000 loss 0.1059 (0.32s/step)
+step 3400/10000 loss 0.0151 (0.32s/step)
+step 3600/10000 loss 0.0233 (0.32s/step)
+step 3800/10000 loss 0.0799 (0.32s/step)
+step 4000/10000 loss 0.0042 (0.32s/step)
+[val @4000] frame_f1=0.6085 event_f1=0.2985 P/R=0.441/0.983 score=0.4535
+step 4200/10000 loss 0.0044 (0.32s/step)
+step 4400/10000 loss 0.0036 (0.32s/step)
+step 4600/10000 loss 0.0111 (0.32s/step)
+step 4800/10000 loss 0.0578 (0.32s/step)
+step 5000/10000 loss 0.0060 (0.31s/step)
+[val @5000] frame_f1=0.8827 event_f1=0.8000 P/R=0.967/0.812 score=0.8413
+  new best score=0.8413
+step 5200/10000 loss 0.0962 (0.31s/step)
+step 5400/10000 loss 0.0025 (0.31s/step)
+step 5600/10000 loss 0.0035 (0.31s/step)
+step 5800/10000 loss 0.0229 (0.31s/step)
+step 6000/10000 loss 0.0034 (0.31s/step)
+[val @6000] frame_f1=0.8843 event_f1=0.6957 P/R=0.843/0.930 score=0.7900
+step 6200/10000 loss 0.0103 (0.31s/step)
+step 6400/10000 loss 0.0045 (0.31s/step)
+step 6600/10000 loss 0.0231 (0.31s/step)
+step 6800/10000 loss 0.0742 (0.31s/step)
+step 7000/10000 loss 0.0052 (0.31s/step)
+[val @7000] frame_f1=0.8987 event_f1=0.8837 P/R=0.960/0.845 score=0.8912
+  new best score=0.8912
+step 7200/10000 loss 0.0700 (0.31s/step)
+step 7400/10000 loss 0.0170 (0.31s/step)
+step 7600/10000 loss 0.0004 (0.31s/step)
+step 7800/10000 loss 0.0547 (0.31s/step)
+step 8000/10000 loss 0.0261 (0.31s/step)
+[val @8000] frame_f1=0.9389 event_f1=0.9333 P/R=0.970/0.910 score=0.9361
+  new best score=0.9361
+step 8200/10000 loss 0.0042 (0.31s/step)
+step 8400/10000 loss 0.0006 (0.31s/step)
+step 8600/10000 loss 0.0015 (0.31s/step)
+step 8800/10000 loss 0.0022 (0.30s/step)
+step 9000/10000 loss 0.0034 (0.30s/step)
+/root/Autoslicer/src/train.py:69: RuntimeWarning: overflow encountered in exp
+  probs[a: a + m] += 1 / (1 + np.exp(-logits[:m]))
+[val @9000] frame_f1=0.9550 event_f1=0.9787 P/R=0.949/0.961 score=0.9668
+  new best score=0.9668
+step 9200/10000 loss 0.0017 (0.30s/step)
+step 9400/10000 loss 0.0014 (0.30s/step)
+step 9600/10000 loss 0.0005 (0.30s/step)
+step 9800/10000 loss 0.0006 (0.30s/step)
+step 10000/10000 loss 0.0100 (0.30s/step)
+[val @10000] frame_f1=0.9318 event_f1=0.8936 P/R=0.981/0.887 score=0.9127
+DONE best_score=0.9668

@@ -1,0 +1,67 @@
+model=crnn params=2.09M
+step 200/10000 loss 0.3916 (0.31s/step)
+step 400/10000 loss 0.1059 (0.31s/step)
+step 600/10000 loss 0.2291 (0.31s/step)
+step 800/10000 loss 0.2967 (0.32s/step)
+step 1000/10000 loss 0.0847 (0.32s/step)
+[val @1000] frame_f1=0.5906 event_f1=0.4118 P/R=0.874/0.446 score=0.5012
+  new best score=0.5012
+step 1200/10000 loss 0.0055 (0.32s/step)
+step 1400/10000 loss 0.0396 (0.32s/step)
+step 1600/10000 loss 0.0365 (0.33s/step)
+step 1800/10000 loss 0.1215 (0.33s/step)
+step 2000/10000 loss 0.0209 (0.33s/step)
+[val @2000] frame_f1=0.7597 event_f1=0.6000 P/R=0.770/0.749 score=0.6798
+  new best score=0.6798
+step 2200/10000 loss 0.1117 (0.33s/step)
+step 2400/10000 loss 0.0136 (0.32s/step)
+step 2600/10000 loss 0.0057 (0.32s/step)
+step 2800/10000 loss 0.0515 (0.32s/step)
+step 3000/10000 loss 0.0374 (0.32s/step)
+[val @3000] frame_f1=0.4677 event_f1=0.4082 P/R=0.314/0.912 score=0.4379
+step 3200/10000 loss 0.0119 (0.32s/step)
+step 3400/10000 loss 0.0042 (0.32s/step)
+step 3600/10000 loss 0.0316 (0.32s/step)
+step 3800/10000 loss 0.0706 (0.32s/step)
+step 4000/10000 loss 0.0649 (0.32s/step)
+[val @4000] frame_f1=0.7654 event_f1=0.7179 P/R=0.910/0.661 score=0.7417
+  new best score=0.7417
+step 4200/10000 loss 0.0056 (0.32s/step)
+step 4400/10000 loss 0.0065 (0.32s/step)
+step 4600/10000 loss 0.0092 (0.32s/step)
+step 4800/10000 loss 0.0636 (0.32s/step)
+step 5000/10000 loss 0.0032 (0.32s/step)
+[val @5000] frame_f1=0.9043 event_f1=0.8372 P/R=0.949/0.864 score=0.8707
+  new best score=0.8707
+step 5200/10000 loss 0.0107 (0.32s/step)
+step 5400/10000 loss 0.1596 (0.32s/step)
+step 5600/10000 loss 0.0050 (0.32s/step)
+step 5800/10000 loss 0.0026 (0.32s/step)
+step 6000/10000 loss 0.0036 (0.31s/step)
+[val @6000] frame_f1=0.9250 event_f1=0.7273 P/R=0.887/0.967 score=0.8261
+step 6200/10000 loss 0.0144 (0.32s/step)
+step 6400/10000 loss 0.0025 (0.32s/step)
+step 6600/10000 loss 0.0214 (0.32s/step)
+step 6800/10000 loss 0.0009 (0.32s/step)
+step 7000/10000 loss 0.0090 (0.32s/step)
+[val @7000] frame_f1=0.8868 event_f1=0.7000 P/R=0.964/0.821 score=0.7934
+step 7200/10000 loss 0.0056 (0.32s/step)
+step 7400/10000 loss 0.0054 (0.32s/step)
+step 7600/10000 loss 0.0218 (0.32s/step)
+step 7800/10000 loss 0.0254 (0.32s/step)
+step 8000/10000 loss 0.0045 (0.32s/step)
+[val @8000] frame_f1=0.9405 event_f1=0.6977 P/R=0.909/0.974 score=0.8191
+step 8200/10000 loss 0.0020 (0.32s/step)
+step 8400/10000 loss 0.0074 (0.32s/step)
+step 8600/10000 loss 0.0037 (0.32s/step)
+step 8800/10000 loss 0.0008 (0.32s/step)
+step 9000/10000 loss 0.0177 (0.32s/step)
+[val @9000] frame_f1=0.9515 event_f1=0.7143 P/R=0.933/0.971 score=0.8329
+step 9200/10000 loss 0.0185 (0.32s/step)
+step 9400/10000 loss 0.0222 (0.32s/step)
+step 9600/10000 loss 0.0015 (0.32s/step)
+step 9800/10000 loss 0.0025 (0.32s/step)
+step 10000/10000 loss 0.0046 (0.32s/step)
+[val @10000] frame_f1=0.9526 event_f1=0.7907 P/R=0.939/0.966 score=0.8716
+  new best score=0.8716
+DONE best_score=0.8716

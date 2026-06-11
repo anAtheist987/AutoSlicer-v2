@@ -49,3 +49,27 @@
 - **04:00 巡检** 分离全部完成（39 场，~85h，平均 31×RT）。zip 17.9GB 仍在传。
   Prep agent 接管：extract→伪标签→合成→emb→manifests，预计 04:20 起训。
   （处理：停掉了与 prep agent 重复的 extract_partial 后台任务，避免并发写同一文件。）
+- **04:10 巡检** 修复 extract_partial 的 ZIP64 解析 bug（4GB+ 条目截断+遍历卡死），
+  解出 111 个新条目：顶层 歌回【主播】/*.m4s = 同批 VOD 的全频带原始音频；新增两位主播
+  （神楽七奈、红晓音Akane）；data/raw/new/ 出现 wav+Audition pkf（人工标注会话素材，
+  marker csv 可能尚在传输）。Prep agent 已进入伪标签阶段（29/39）。
+- **04:30 巡检** Prep 全部完成：39 伪标签 + 120 合成片段 + emb 159 + manifests
+  (train 154 项 / val 5 项 = 东雪莲×2 + 其他主播×3)。三训练已起：crnn 0.31s/step、
+  tcn 0.30s/step (GPU0/1)、panns_head 0.57s/step (GPU2)。预计 05:30-06:10 完成。
+- **04:40 巡检** 训练健康推进：tcn@1000 val frame_f1=0.40 (P0.27/R0.78，早期过召回正常)；
+  crnn@1000 验证中；panns_head 较慢 (0.6s/step)。训练 agent 自行修复了 eval 解包 3 元组的
+  bug（focus 字段引入）。zip 25.1GB 仍在传。
+- **04:55 巡检** 中期指标（对伪标签）：tcn@3000 frame0.78/event0.65（最佳 score 0.72）；
+  crnn@2000 0.76/0.60；panns_head@1000 0.73/0.62（P=0.99 嵌入信息量足）。
+  中期 P/R 振荡属正常，cosine 末段会收敛。zip 28GB。
+- **05:03 巡检** crnn@5000 frame0.90/event0.84(score0.87)；tcn@5000 0.88/0.80；
+  panns_head 召回卡 0.58。zip 新解出 歌回【阿梓从小就很可爱】（旧项目的标注主播！）
+  —— 阿梓的人工标注很可能随后到达。
+- **05:21 巡检** tcn@9000 frame0.955/event0.979(score0.967，伪标签val)；crnn@8000 frame0.94；
+  panns_head 过拟合(loss≈0)召回卡0.53，预计淘汰。zip 继续解出新主播(露娜/露米)，32.6GB。
+  训练即将收尾进入 Tune。
+- **05:45 转折点** zip 传输完成(35.4GB)！金标到达：阿梓 标注/ = 7 csv(Audition 标记) + wav，
+  6 场可用共 167 首人工标注歌曲(~21h, 正例~50%)。已建金标管线 (scripts/gold_azusa.py)：
+  4 场训练 + 2 场验证(47首)，负例复用其他主播(含东雪莲)伪唱歌段 focus。
+  gold_crnn@GPU0 / gold_tcn@GPU1 已开训(8k步,~06:35 完)。东雪莲伪标签模型转为
+  辅助产物(声纹判别诊断用)。1237149092 的 csv 为空已剔除。
