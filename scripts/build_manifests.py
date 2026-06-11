@@ -23,13 +23,16 @@ def main():
     ap.add_argument('--val-vods', nargs='*', default=None,
                     help='target-vod stems for validation; default: 2 with most positives')
     ap.add_argument('--out-dir', default='data/processed')
+    ap.add_argument('--feature', default='mel', choices=['mel', 'emb'])
     args = ap.parse_args()
     out_dir = ROOT / args.out_dir
     out_dir.mkdir(parents=True, exist_ok=True)
+    out_fps = 3.125 if args.feature == 'mel' else 1.5625
+    suffix = '' if args.feature == 'mel' else '_emb'
 
-    mel_dir = ROOT / 'data/cache/mel'
-    lab_dir = ROOT / 'data/cache/labels'
-    streamers = sorted(d.name for d in mel_dir.iterdir() if d.is_dir())
+    mel_dir = ROOT / 'data/cache' / args.feature
+    lab_dir = ROOT / ('data/cache/labels' if args.feature == 'mel' else 'data/cache/emb_labels')
+    streamers = sorted(d.name for d in mel_dir.iterdir() if d.is_dir() and d.name != 'synth')
 
     train, val = [], []
 
@@ -37,12 +40,13 @@ def main():
     tgt_items = []
     for mel_p in sorted((mel_dir / args.target).glob('*.npy')):
         stem = mel_p.stem
-        lab_p = lab_dir / args.target / f'{stem}.lab.npy'
+        lab_name = f'{stem}.lab.npy' if args.feature == 'mel' else f'{stem}.npy'
+        lab_p = lab_dir / args.target / lab_name
         if not lab_p.exists():
             print(f'no label for {stem}, skip')
             continue
         lab = np.load(lab_p)
-        pos_s = float((lab > 0.5).sum() / 3.125)
+        pos_s = float((lab > 0.5).sum() / out_fps)
         tgt_items.append({'mel': str(mel_p), 'label': str(lab_p), 'vod': f'{args.target}/{stem}',
                           'pos_seconds': round(pos_s, 1)})
     tgt_items.sort(key=lambda x: -x['pos_seconds'])
@@ -58,15 +62,17 @@ def main():
     val += val_t
 
     # --- other streamers: all-zero labels + focus regions
-    zero_dir = ROOT / 'data/cache/labels_zero'
+    zero_dir = ROOT / ('data/cache/labels_zero' + suffix)
+    segs_dir = ROOT / 'data/cache/labels'
     for st in streamers:
         if st == args.target:
             continue
         items = []
         for mel_p in sorted((mel_dir / st).glob('*.npy')):
             stem = mel_p.stem
-            segs_p = lab_dir / st / f'{stem}.segs.json'
-            lab_p = lab_dir / st / f'{stem}.lab.npy'
+            segs_p = segs_dir / st / f'{stem}.segs.json'
+            lab_name = f'{stem}.lab.npy' if args.feature == 'mel' else f'{stem}.npy'
+            lab_p = lab_dir / st / lab_name
             if not lab_p.exists():
                 continue
             n = len(np.load(lab_p))
@@ -87,15 +93,22 @@ def main():
             val.append(items[0])
 
     # --- synthetic
-    synth_p = ROOT / 'data/cache/synth/synth_manifest.json'
     n_synth = 0
-    if synth_p.exists():
-        synth = json.loads(synth_p.read_text())
-        train += synth
-        n_synth = len(synth)
+    if args.feature == 'mel':
+        synth_p = ROOT / 'data/cache/synth/synth_manifest.json'
+        if synth_p.exists():
+            synth = json.loads(synth_p.read_text())
+            train += synth
+            n_synth = len(synth)
+    else:
+        for emb_p in sorted((ROOT / 'data/cache/emb/synth').glob('*.npy')):
+            lab_p = ROOT / 'data/cache/emb_labels/synth' / emb_p.name
+            if lab_p.exists():
+                train.append({'mel': str(emb_p), 'label': str(lab_p), 'vod': f'synth/{emb_p.stem}'})
+                n_synth += 1
 
-    (out_dir / 'manifest_train.json').write_text(json.dumps(train, ensure_ascii=False, indent=1))
-    (out_dir / 'manifest_val.json').write_text(json.dumps(val, ensure_ascii=False, indent=1))
+    (out_dir / f'manifest_train{suffix}.json').write_text(json.dumps(train, ensure_ascii=False, indent=1))
+    (out_dir / f'manifest_val{suffix}.json').write_text(json.dumps(val, ensure_ascii=False, indent=1))
     print(f'train: {len(train)} items ({n_synth} synthetic), val: {len(val)} items')
     for it in val:
         print('  val:', it['vod'])

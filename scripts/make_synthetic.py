@@ -89,6 +89,7 @@ def main():
         lab = np.full(n_out, label, dtype=np.float32)
         np.save(out_dir / f'{name}.mel.npy', mel)
         np.save(out_dir / f'{name}.lab.npy', lab)
+        sf.write(out_dir / f'{name}.wav', wav, SR, subtype='PCM_16')  # for emb extraction
         manifest.append({'mel': str(out_dir / f'{name}.mel.npy'),
                          'label': str(out_dir / f'{name}.lab.npy'), 'vod': name})
 
