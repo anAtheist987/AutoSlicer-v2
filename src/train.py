@@ -17,11 +17,12 @@ from pathlib import Path
 
 import numpy as np
 import torch
+torch.multiprocessing.set_sharing_strategy("file_system")  # /dev/shm is only 64M here
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 sys.path.insert(0, str(Path(__file__).parent))
-from dataset import VODWindows, WindowConfig  # noqa: E402
+from dataset import VODWindows, WindowConfig, collate_numpy  # noqa: E402
 from metrics import frame_metrics, event_metrics  # noqa: E402
 from models import build_model, count_params  # noqa: E402
 from postprocess import PostProcessConfig, probs_to_segments, mask_to_runs  # noqa: E402
@@ -77,10 +78,18 @@ def evaluate_full(model, pairs, device, out_fps=3.125, chunk_out=2048, overlap_o
         all_frame["fn"] += int(((p == 0) & (t == 1)).sum())
         all_frame["tn"] += int(((p == 0) & (t == 0)).sum())
         # events on this vod, offset to keep vods disjoint on a global timeline
-        segs = probs_to_segments(probs, PostProcessConfig(frame_rate=out_fps))
+        pcfg = PostProcessConfig(frame_rate=out_fps)
+        segs = probs_to_segments(probs, pcfg)
         ev_pred += [(s["start"] + t_offset, s["end"] + t_offset) for s in segs]
+        # apply the same gap-merge semantics to ground truth (product-level events)
+        true_runs = []
         for a, b in mask_to_runs(t.astype(bool)):
-            ev_true.append((a / out_fps + t_offset, b / out_fps + t_offset))
+            s, e = a / out_fps, b / out_fps
+            if true_runs and s - true_runs[-1][1] <= pcfg.merge_gap_s:
+                true_runs[-1][1] = e
+            else:
+                true_runs.append([s, e])
+        ev_true += [(s + t_offset, e + t_offset) for s, e in true_runs]
         t_offset += n_out / out_fps + 3600
     tp, fp, fn, tn = all_frame["tp"], all_frame["fp"], all_frame["fn"], all_frame["tn"]
     prec = tp / (tp + fp) if tp + fp else 0.0
@@ -130,7 +139,8 @@ def main():
     train_ds = VODWindows(train_pairs, wcfg, train=True, input_type=args.input_type,
                           samples_per_epoch=args.batch_size * args.val_every)
     dl = DataLoader(train_ds, batch_size=args.batch_size, num_workers=args.num_workers,
-                    pin_memory=True, drop_last=True, persistent_workers=args.num_workers > 0)
+                    drop_last=True, persistent_workers=args.num_workers > 0,
+                    collate_fn=collate_numpy)
 
     model = build_model(args.model, **json.loads(args.model_kwargs)).to(device)
     print(f"model={args.model} params={count_params(model)/1e6:.2f}M", flush=True)
@@ -145,7 +155,8 @@ def main():
         for mel, y in dl:
             if step >= args.steps:
                 break
-            mel, y = mel.to(device, non_blocking=True), y.to(device, non_blocking=True)
+            mel = torch.from_numpy(mel).to(device, non_blocking=True)
+            y = torch.from_numpy(y).to(device, non_blocking=True)
             if args.input_type == "emb":
                 mel = mel.transpose(1, 2)  # [B, D, T'] -> [B, T', D]
             model.train()

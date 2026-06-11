@@ -13,8 +13,15 @@ import dataclasses
 from pathlib import Path
 
 import numpy as np
-import torch
 from torch.utils.data import Dataset
+
+
+def collate_numpy(batch):
+    """Stack to numpy in the worker; tensors are created in the main process.
+    torch-tensor IPC needs shared mmap which SIGBUSes on this container's
+    overlayfs /tmp + 64M /dev/shm; plain numpy pickling over the pipe is safe."""
+    xs, ys = zip(*batch)
+    return np.stack(xs), np.stack(ys)
 
 
 @dataclasses.dataclass
@@ -85,7 +92,7 @@ class VODWindows(Dataset):
 
     def _augment(self, mel: np.ndarray) -> np.ndarray:
         c = self.cfg
-        mel = mel + self.rng.uniform(-c.gain_jitter_db, c.gain_jitter_db) * np.log(10) / 20
+        mel = mel + np.float32(self.rng.uniform(-c.gain_jitter_db, c.gain_jitter_db) * np.log(10) / 20)
         for _ in range(c.n_masks):
             f0 = self.rng.integers(0, mel.shape[0] - c.freq_mask)
             mel[f0: f0 + self.rng.integers(1, c.freq_mask + 1)] = mel.mean()
@@ -96,8 +103,7 @@ class VODWindows(Dataset):
     def __getitem__(self, i):
         if not self.train:
             vi, o = self.eval_index[i]
-            mel, y = self._crop(vi, o)
-            return torch.from_numpy(mel), torch.from_numpy(y)
+            return self._crop(vi, o)
         vi = int(self.rng.integers(0, len(self.mels)))
         lab = self.labels[vi]
         if self.pos_regions[vi] and self.rng.random() < self.cfg.pos_fraction:
@@ -109,4 +115,4 @@ class VODWindows(Dataset):
         mel, y = self._crop(vi, out_start)
         if self.input_type == "mel":
             mel = self._augment(mel)
-        return torch.from_numpy(np.ascontiguousarray(mel)), torch.from_numpy(y)
+        return np.ascontiguousarray(mel, dtype=np.float32), y
