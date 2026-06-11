@@ -1,0 +1,14 @@
+data/
+*.wav
+*.flac
+*.mp3
+*.m4a
+*.zip
+models/
+logs/
+runs/
+__pycache__/
+*.pt
+*.pth
+*.pkl
+.venv/
