@@ -42,3 +42,10 @@
 - **03:10** 执行 workflow 启动（run wf_3c3d5289-65e）：Prep(等分离+伪标签+合成+manifests) →
   Train(crnn@GPU0, tcn@GPU1, panns_head@GPU2 并行) → Tune(后处理网格) → Demo(端到端切片+RTF)。
   另设 18min 周期巡检 cron 监控卡死与 zip 标注到达。
+- **03:25 巡检** 分离 22/39（按计划 ~04:00 完）；zip 传输恢复至 ~3MB/s（已 11.1GB），新到 4.3GB
+  猫雷大文件已部分提取，暂未见标注 csv；执行 workflow Prep agent 正常轮询中。
+- **03:45 巡检** 分离 34/39；zip 已 14.3GB 仍在传，data_8k 之后暂未出现标注目录；
+  部分提取持续后台跑。workflow Prep 等待分离收尾。
+- **04:00 巡检** 分离全部完成（39 场，~85h，平均 31×RT）。zip 17.9GB 仍在传。
+  Prep agent 接管：extract→伪标签→合成→emb→manifests，预计 04:20 起训。
+  （处理：停掉了与 prep agent 重复的 extract_partial 后台任务，避免并发写同一文件。）

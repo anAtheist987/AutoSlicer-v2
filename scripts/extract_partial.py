@@ -26,7 +26,22 @@ def main():
         comp_size, uncomp_size = struct.unpack('<II', hdr[18:26])
         nlen, elen = struct.unpack('<HH', hdr[26:30])
         raw_name = f.read(nlen)
-        f.read(elen)
+        extra = f.read(elen)
+        # ZIP64: 32-bit size fields are 0xFFFFFFFF, real sizes in extra field 0x0001
+        if uncomp_size == 0xFFFFFFFF or comp_size == 0xFFFFFFFF:
+            ep = 0
+            while ep + 4 <= len(extra):
+                eid, esz = struct.unpack('<HH', extra[ep:ep + 4])
+                if eid == 0x0001:
+                    body = extra[ep + 4: ep + 4 + esz]
+                    bp = 0
+                    if uncomp_size == 0xFFFFFFFF:
+                        uncomp_size = struct.unpack('<Q', body[bp:bp + 8])[0]
+                        bp += 8
+                    if comp_size == 0xFFFFFFFF:
+                        comp_size = struct.unpack('<Q', body[bp:bp + 8])[0]
+                    break
+                ep += 4 + esz
         data_start = pos + 30 + nlen + elen
         if flags & 0x8 and comp_size == 0:
             print('data-descriptor entry, cannot stream:', raw_name, file=sys.stderr)
