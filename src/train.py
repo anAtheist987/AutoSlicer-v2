@@ -35,9 +35,9 @@ def seed_all(seed: int = 42):
     torch.cuda.manual_seed_all(seed)
 
 
-def load_pairs(manifest: Path) -> list[tuple[Path, Path]]:
+def load_pairs(manifest: Path) -> list[tuple]:
     items = json.loads(Path(manifest).read_text())
-    return [(Path(it["mel"]), Path(it["label"])) for it in items]
+    return [(Path(it["mel"]), Path(it["label"]), it.get("focus")) for it in items]
 
 
 @torch.no_grad()
@@ -71,12 +71,13 @@ def evaluate_full(model, pairs, device, out_fps=3.125, chunk_out=2048, overlap_o
             if b >= n_out:
                 break
         probs /= np.maximum(weight, 1)
+        valid = lab >= 0  # exclude ignore frames from frame metrics
         p = (probs >= 0.5).astype(np.int8)
         t = (lab >= 0.5).astype(np.int8)
-        all_frame["tp"] += int(((p == 1) & (t == 1)).sum())
-        all_frame["fp"] += int(((p == 1) & (t == 0)).sum())
-        all_frame["fn"] += int(((p == 0) & (t == 1)).sum())
-        all_frame["tn"] += int(((p == 0) & (t == 0)).sum())
+        all_frame["tp"] += int(((p == 1) & (t == 1) & valid).sum())
+        all_frame["fp"] += int(((p == 1) & (t == 0) & valid).sum())
+        all_frame["fn"] += int(((p == 0) & (t == 1) & valid).sum())
+        all_frame["tn"] += int(((p == 0) & (t == 0) & valid).sum())
         # events on this vod, offset to keep vods disjoint on a global timeline
         pcfg = PostProcessConfig(frame_rate=out_fps)
         segs = probs_to_segments(probs, pcfg)
@@ -163,7 +164,11 @@ def main():
             with torch.autocast("cuda", dtype=torch.bfloat16):
                 logits = model(mel)
                 n = min(logits.shape[1], y.shape[1])
-                loss = torch.nn.functional.binary_cross_entropy_with_logits(logits[:, :n], y[:, :n])
+                yy = y[:, :n]
+                raw = torch.nn.functional.binary_cross_entropy_with_logits(
+                    logits[:, :n], yy.clamp(0, 1), reduction="none")
+                mask = (yy >= 0).float()  # -1 = ignore
+                loss = (raw * mask).sum() / mask.sum().clamp(1)
             opt.zero_grad(set_to_none=True)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 5.0)

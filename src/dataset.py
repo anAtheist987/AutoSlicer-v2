@@ -38,29 +38,39 @@ class WindowConfig:
 
 
 class VODWindows(Dataset):
-    def __init__(self, pairs: list[tuple[Path, Path]], cfg: WindowConfig = WindowConfig(),
+    def __init__(self, pairs: list, cfg: WindowConfig = WindowConfig(),
                  train: bool = True, samples_per_epoch: int = 4000,
                  input_type: str = "mel"):
-        """pairs: [(feature_npy, label_npy)].
+        """pairs: [(feature_npy, label_npy)] or [(feature_npy, label_npy, focus_regions)].
 
         input_type="mel": feature is [n_mels, T] at mel_fps; labels at out_fps = mel_fps/16.
         input_type="emb": feature is [T', D] on the SAME grid as labels (ratio 1);
                           augmentation is skipped.
+        Labels may contain -1 = ignore (excluded from the loss).
+        focus_regions: optional [(start_s, end_s)] regions to oversample (e.g. other
+        streamers' singing as hard negatives); used like pos_regions for crop centers.
         """
         self.input_type = input_type
         self.cfg = cfg
         self.train = train
         self.samples_per_epoch = samples_per_epoch
         self.mels, self.labels = [], []
-        self.pos_regions = []  # per vod: list of (start_out, end_out) label==1 runs
-        for mel_p, lab_p in pairs:
+        self.pos_regions = []  # per vod: list of (start_out, end_out) crop-center runs
+        for item in pairs:
+            mel_p, lab_p = item[0], item[1]
+            focus = item[2] if len(item) > 2 else None
             mel = np.load(mel_p, mmap_mode="r")
             lab = np.load(lab_p)
             self.mels.append(mel)
             self.labels.append(lab)
-            d = np.diff(np.concatenate([[0], (lab > 0.5).astype(np.int8), [0]]))
-            starts, ends = np.flatnonzero(d == 1), np.flatnonzero(d == -1)
-            self.pos_regions.append(list(zip(starts, ends)))
+            if focus:
+                self.pos_regions.append(
+                    [(int(s * cfg.out_fps), max(int(s * cfg.out_fps) + 1, int(e * cfg.out_fps)))
+                     for s, e in focus])
+            else:
+                d = np.diff(np.concatenate([[0], (lab > 0.5).astype(np.int8), [0]]))
+                starts, ends = np.flatnonzero(d == 1), np.flatnonzero(d == -1)
+                self.pos_regions.append(list(zip(starts, ends)))
         self.out_win = int(cfg.window_s * cfg.out_fps)
         self.ratio = int(round(cfg.mel_fps / cfg.out_fps)) if input_type == "mel" else 1
         self.mel_win = self.out_win * self.ratio
