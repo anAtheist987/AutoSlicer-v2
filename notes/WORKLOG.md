@@ -34,3 +34,11 @@
    C(可选)=ECAPA 歌手验证分支处理"放别人唱的同一首歌"干扰。视训练情况取舍。
 3. **验证协议**：按 VOD 划分 train/val（绝不按帧随机分），主指标 = 0.5*frame-F1 + 0.5*event-F1。
 4. **合并语义**：按用户要求，中间插放他人版本 ≤90s 时整体算一段（PostProcessConfig.merge_gap_s）。
+
+- **02:45–03:10** 关键转折：zip 传输近停滞、PANNs 在 8kHz 窄带上唱歌检测退化（p99=0.38）
+  → 启动**自监督数据工厂**主路线（见 DESIGN.md）：HTDemucs 3-GPU 分块分离（修复了整文件载入
+  OOM 静默死亡问题）→ YIN/能量伪标签（实测：聊天候选段被 sustained_frac 过滤器正确拒绝，
+  唱歌段呈 1.3-3.9min 歌曲形态）→ 其他主播=声纹难负例 → stem 重混合成干扰(d)样本。
+- **03:10** 执行 workflow 启动（run wf_3c3d5289-65e）：Prep(等分离+伪标签+合成+manifests) →
+  Train(crnn@GPU0, tcn@GPU1, panns_head@GPU2 并行) → Tune(后处理网格) → Demo(端到端切片+RTF)。
+  另设 18min 周期巡检 cron 监控卡死与 zip 标注到达。
