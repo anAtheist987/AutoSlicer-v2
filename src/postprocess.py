@@ -31,6 +31,13 @@ class PostProcessConfig:
     min_song_s: float = 50.0       # discard "songs" shorter than this
     pad_before_s: float = 5.0      # video lead-in
     pad_after_s: float = 5.0       # video lead-out
+    # boundary refinement: trim the low-confidence "shoulders" the loose
+    # off_threshold leaves at segment edges (pre-song humming, talk over the
+    # intro). Only the outermost boundaries move; interior gap-fills stay.
+    refine_edges: bool = False
+    edge_threshold: float = 0.45   # walk outward from the core while p >= this
+    core_threshold: float = 0.60   # "surely singing" level anchoring a boundary
+    core_min_s: float = 4.0        # min sustained core run to count as anchor
 
 
 def smooth(probs: np.ndarray, cfg: PostProcessConfig) -> np.ndarray:
@@ -65,6 +72,28 @@ def mask_to_runs(mask: np.ndarray) -> list[tuple[int, int]]:
     return list(zip(idx[0::2], idx[1::2]))
 
 
+def refine_run(p: np.ndarray, a: int, b: int, cfg: PostProcessConfig) -> tuple[int, int]:
+    """Re-place [a, b)'s outer boundaries: anchor on the first/last sustained
+    high-confidence core run, then extend outward while p >= edge_threshold.
+    Falls back to the original boundary if no core exists or the trim would
+    drop the segment below min_song_s."""
+    fr = cfg.frame_rate
+    k = max(1, int(round(cfg.core_min_s * fr)))
+    core = p[a:b] >= cfg.core_threshold
+    runs = [(ra, rb) for ra, rb in mask_to_runs(core) if rb - ra >= k]
+    if not runs:
+        return a, b
+    na = a + runs[0][0]
+    while na > a and p[na - 1] >= cfg.edge_threshold:
+        na -= 1
+    nb = a + runs[-1][1]
+    while nb < b and p[nb] >= cfg.edge_threshold:
+        nb += 1
+    if (nb - na) / fr < cfg.min_song_s:
+        return a, b
+    return na, nb
+
+
 def probs_to_segments(probs: np.ndarray, cfg: PostProcessConfig = PostProcessConfig(),
                       total_duration_s: float | None = None) -> list[dict]:
     """Returns [{'start': s, 'end': s, 'cut_start': s, 'cut_end': s}] in seconds."""
@@ -92,6 +121,9 @@ def probs_to_segments(probs: np.ndarray, cfg: PostProcessConfig = PostProcessCon
             merged.append([a, b])
 
     merged = [(a, b) for a, b in merged if (b - a) / fr >= cfg.min_song_s]
+
+    if cfg.refine_edges:
+        merged = [refine_run(p, a, b, cfg) for a, b in merged]
 
     out = []
     for a, b in merged:

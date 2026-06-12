@@ -51,7 +51,7 @@ pip install torch torchaudio numpy scipy requests   # 推理只需要这 5 个
 # ffmpeg 需要在 PATH 里:apt install ffmpeg / brew install ffmpeg
 
 # 下载模型(阿梓声线版,Releases 页也可手动下)
-wget https://github.com/anAtheist987/AutoSlicer-v2/releases/download/v2.0.0/best.pt
+wget https://github.com/anAtheist987/AutoSlicer-v2/releases/download/v2.1.0/best.pt
 ```
 
 训练自己的模型才需要完整依赖:`pip install -r requirements.txt`。
