@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "autoslicer"
+version = "2.1.0"
+description = "Singer-specific singing detection & auto-slicing for livestream VODs"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "anAtheist987" }]
+requires-python = ">=3.10"
+# inference-only dependencies; ffmpeg must be on PATH
+dependencies = [
+    "torch>=2.0",
+    "torchaudio",
+    "numpy",
+    "scipy",
+    "requests",
+]
+
+[project.optional-dependencies]
+# training + self-supervised data factory
+train = [
+    "tensorboard",
+    "librosa",
+    "soundfile",
+    "demucs",
+]
+# experimental PANNs embedding track (src/panns.py)
+panns = ["torchlibrosa"]
+
+[project.urls]
+Homepage = "https://github.com/anAtheist987/AutoSlicer-v2"
+Report = "https://github.com/anAtheist987/AutoSlicer-v2/blob/master/reports/FINAL_REPORT.md"
+
+[project.scripts]
+autoslicer = "infer:main"
+autoslicer-dl = "bilibili:main"
+
+# src/ holds flat modules that import each other by bare name (import models,
+# from postprocess import ...), so they are installed as top-level modules.
+[tool.setuptools]
+package-dir = { "" = "src" }
+py-modules = [
+    "bilibili",
+    "dataset",
+    "features",
+    "infer",
+    "metrics",
+    "models",
+    "panns",
+    "postprocess",
+    "train",
+]

@@ -16,3 +16,5 @@ out/
 logs_*.txt
 *.log
 .claude/
+build/
+*.egg-info/

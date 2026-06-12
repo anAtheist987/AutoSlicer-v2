@@ -47,14 +47,24 @@ out/
 
 ```bash
 git clone https://github.com/anAtheist987/AutoSlicer-v2.git && cd AutoSlicer-v2
-pip install torch torchaudio numpy scipy requests   # 推理只需要这 5 个
+pip install .            # 推理依赖;装完有 autoslicer / autoslicer-dl 两个命令
 # ffmpeg 需要在 PATH 里:apt install ffmpeg / brew install ffmpeg
 
 # 下载模型(阿梓声线版,Releases 页也可手动下)
 wget https://github.com/anAtheist987/AutoSlicer-v2/releases/download/v2.1.0/best.pt
 ```
 
-训练自己的模型才需要完整依赖:`pip install -r requirements.txt`。
+训练自己的模型装完整依赖:`pip install ".[train]"`。
+
+### 或者用 Docker(免装环境)
+
+```bash
+docker build -t autoslicer .
+docker run --rm --gpus all -v "$PWD":/work autoslicer \
+    --input "https://www.bilibili.com/video/BVxxxxxxxxxx" \
+    --checkpoint /work/best.pt --out-dir /work/out --cut-video
+# 没有 N 卡:去掉 --gpus all,加 --device cpu
+```
 
 ## 使用
 
