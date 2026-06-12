@@ -1,0 +1,14 @@
+# inference
+torch>=2.0
+torchaudio
+numpy
+scipy
+requests        # bilibili downloader
+# ffmpeg must be on PATH (decode + cutting)
+
+# training / data factory (optional for inference-only use)
+tensorboard
+librosa
+soundfile
+demucs          # HTDemucs source separation for pseudo-labels
+torchlibrosa    # only for the experimental PANNs track (src/panns.py)

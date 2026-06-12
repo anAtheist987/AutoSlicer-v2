@@ -13,7 +13,7 @@ from pathlib import Path
 
 import numpy as np
 
-ROOT = Path('/root/Autoslicer')
+ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
 from metrics import event_metrics  # noqa: E402
 from postprocess import PostProcessConfig, mask_to_runs, probs_to_segments  # noqa: E402

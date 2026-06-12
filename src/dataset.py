@@ -59,9 +59,11 @@ class VODWindows(Dataset):
         self.samples_per_epoch = samples_per_epoch
         self.mels, self.labels = [], []
         self.pos_regions = []  # per vod: list of (start_out, end_out) crop-center runs
+        weights = []
         for item in pairs:
             mel_p, lab_p = item[0], item[1]
             focus = item[2] if len(item) > 2 else None
+            weights.append(float(item[3]) if len(item) > 3 and item[3] else 1.0)
             mel = np.load(mel_p, mmap_mode="r")
             lab = np.load(lab_p)
             self.mels.append(mel)
@@ -77,6 +79,8 @@ class VODWindows(Dataset):
                 d = np.diff(np.concatenate([[0], is_pos.astype(np.int8), [0]]))
                 starts, ends = np.flatnonzero(d == 1), np.flatnonzero(d == -1)
                 self.pos_regions.append(list(zip(starts, ends)))
+        w = np.asarray(weights, dtype=np.float64)
+        self.item_p = w / w.sum()
         self.out_win = int(cfg.window_s * cfg.out_fps)
         self.ratio = int(round(cfg.mel_fps / cfg.out_fps)) if input_type == "mel" else 1
         self.mel_win = self.out_win * self.ratio
@@ -123,7 +127,7 @@ class VODWindows(Dataset):
         if not self.train:
             vi, o = self.eval_index[i]
             return self._crop(vi, o)
-        vi = int(self.rng.integers(0, len(self.mels)))
+        vi = int(self.rng.choice(len(self.mels), p=self.item_p))
         lab = self.labels[vi]
         if self.pos_regions[vi] and self.rng.random() < self.cfg.pos_fraction:
             a, b = self.pos_regions[vi][int(self.rng.integers(0, len(self.pos_regions[vi])))]

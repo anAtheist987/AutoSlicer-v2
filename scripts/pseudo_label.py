@@ -24,7 +24,7 @@ import librosa
 import numpy as np
 import soundfile as sf
 
-ROOT = Path('/root/Autoslicer')
+ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
 
 OUT_FPS = 3.125

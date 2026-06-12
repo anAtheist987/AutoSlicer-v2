@@ -2,8 +2,8 @@
 import os, sys, time, zipfile
 from pathlib import Path
 
-ZIP = '/root/AgentGateway/数据集.zip'
-OUT = Path('/root/Autoslicer/data/raw')
+ZIP = sys.argv[1] if len(sys.argv) > 1 else 'dataset.zip'
+OUT = Path(__file__).resolve().parents[1] / 'data/raw'
 
 prev = -1
 while True:

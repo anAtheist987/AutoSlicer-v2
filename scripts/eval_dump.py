@@ -14,7 +14,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-ROOT = Path('/root/Autoslicer')
+ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
 from models import build_model  # noqa: E402
 

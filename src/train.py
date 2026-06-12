@@ -37,7 +37,8 @@ def seed_all(seed: int = 42):
 
 def load_pairs(manifest: Path) -> list[tuple]:
     items = json.loads(Path(manifest).read_text())
-    return [(Path(it["mel"]), Path(it["label"]), it.get("focus")) for it in items]
+    return [(Path(it["mel"]), Path(it["label"]), it.get("focus"), it.get("weight"))
+            for it in items]
 
 
 def logits_to_probs(logits: np.ndarray, classes: int) -> np.ndarray:

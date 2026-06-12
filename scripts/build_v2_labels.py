@@ -16,19 +16,21 @@ Manifests:
 
 Usage: python scripts/build_v2_labels.py
 """
+import argparse
 import json
 import sys
 from pathlib import Path
 
 import numpy as np
 
-ROOT = Path('/root/Autoslicer')
+ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
 
 OUT_FPS = 3.125
 VOC_ON_DB, ACC_ON_DB = -38.0, -45.0
 VAL_VODS = {'1188184012-1-30280', '1190452750-1-30280'}
 EXCLUDE = {'1237149092-1-30280'}
+SUFFIX = ''
 AZ_FB_DIR = ROOT / 'data/raw/歌回【阿梓从小就很可爱】'
 OTHERS = ['歌回【东雪莲】', '歌回【小柔channel】', '歌回【月隐空夜】', '歌回【猫雷】']
 
@@ -116,7 +118,9 @@ def main():
             lab = gold_class_label(stem, n_out)
             lp = OUT / f'az_{stem}.{dom}.npy'
             np.save(lp, lab)
-            train.append({'mel': str(mel_p), 'label': str(lp), 'vod': f'阿梓{dom}/{stem}'})
+            # heavy sampling weight: only 8 items carry class-1 supervision
+            train.append({'mel': str(mel_p), 'label': str(lp), 'vod': f'阿梓{dom}/{stem}',
+                          'weight': 12.0})
 
     # ---- other streamers, both domains
     for st in OTHERS:
@@ -148,11 +152,12 @@ def main():
             continue
         lp = OUT / f'synth_{name}.npy'
         np.save(lp, np.full(n_out, v, dtype=np.float32))
-        train.append({'mel': str(mel_p), 'label': str(lp), 'vod': f'synthv2/{name}'})
+        train.append({'mel': str(mel_p), 'label': str(lp), 'vod': f'synthv2/{name}',
+                      'weight': 0.25})
 
     out = ROOT / 'data/processed'
-    (out / 'v2_train.json').write_text(json.dumps(train, ensure_ascii=False, indent=1))
-    (out / 'v2_val.json').write_text(json.dumps(val, ensure_ascii=False, indent=1))
+    (out / f'v2_train{SUFFIX}.json').write_text(json.dumps(train, ensure_ascii=False, indent=1))
+    (out / f'v2_val{SUFFIX}.json').write_text(json.dumps(val, ensure_ascii=False, indent=1))
     from collections import Counter
     c = Counter(it['vod'].split('/')[0] for it in train)
     print(f'v2_train: {len(train)} items {dict(c)}')
@@ -160,4 +165,11 @@ def main():
 
 
 if __name__ == '__main__':
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--val-vods', nargs='*', default=None)
+    ap.add_argument('--suffix', default='')
+    a = ap.parse_args()
+    if a.val_vods:
+        VAL_VODS = set(a.val_vods)
+    SUFFIX = a.suffix
     main()

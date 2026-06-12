@@ -12,7 +12,7 @@ from pathlib import Path
 
 import numpy as np
 
-ROOT = Path('/root/Autoslicer')
+ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
 
 DIRS = ['歌回【东雪莲】', '歌回【小柔channel】', '歌回【月隐空夜】', '歌回【猫雷】',

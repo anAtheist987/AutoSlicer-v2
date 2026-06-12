@@ -21,7 +21,7 @@ import numpy as np
 import soundfile as sf
 import torch
 
-ROOT = Path('/root/Autoslicer')
+ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
 from features import FeatureConfig, LogMel  # noqa: E402
 

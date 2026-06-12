@@ -13,7 +13,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-ROOT = Path('/root/Autoslicer')
+ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
 from features import FeatureConfig, LogMel, load_audio  # noqa: E402
 from panns import load_panns  # noqa: E402

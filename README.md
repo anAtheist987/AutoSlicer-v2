@@ -14,9 +14,18 @@
 ## 快速使用
 
 ```bash
-python src/infer.py --input vod.mp4 --checkpoint runs/gold_crnn/best.pt \
-    --out-dir out/ --gpu 0 --on-threshold 0.6 --off-threshold 0.3 --cut-video
+# 本地文件
+python src/infer.py --input vod.mp4 --checkpoint runs/v2_final/best.pt \
+    --out-dir out/ --gpu 0 --cut-video
 # -> out/vod.segments.json + out/vod_songNN.mp4 (ffmpeg -c copy 秒级切片)
+
+# 直接给 B 站链接（BV 号 / 完整 URL / b23.tv 短链均可），自动下载后切片
+python src/infer.py --input "https://www.bilibili.com/video/BVxxxxxxxxxx" \
+    --checkpoint runs/v2_final/best.pt --out-dir out/ --cut-video
+# 多 P 用 --page N；无登录视频最高 480p，--cookie "SESSDATA=..." 可提清晰度
+
+# 只用下载器
+python src/bilibili.py "https://b23.tv/xxxxxx" --out-dir downloads [--video]
 ```
 
 ## 训练新主播
@@ -41,5 +50,18 @@ python scripts/tune_postprocess.py --probs-dir runs/my_run/val_probs
 | `scripts/` | 数据工厂（解压/分离/伪标签/合成/嵌入/manifests/金标/调参） |
 | `notes/` | RESEARCH.md（SOTA 调研）/ DESIGN.md / WORKLOG.md |
 | `reports/` | FINAL_REPORT.md |
-| `runs/` | 训练产物（gitignore，`gold_crnn/best.pt` 为最终模型） |
+| `runs/` | 训练产物（gitignore，`v2_final/best.pt` 为最终模型） |
 | `data/` | 数据与缓存（gitignore） |
+
+## 安装
+
+```bash
+pip install -r requirements.txt   # 推理只需前 5 行；ffmpeg 需在 PATH
+```
+
+## 许可证与声明
+
+代码以 [MIT](LICENSE) 发布。训练数据（主播 VOD）不随仓库分发。
+B 站下载模块仅供个人学习研究使用：请遵守 bilibili 服务条款，尊重主播对其内容的权利,
+切片二次发布前请确认获得授权。依赖项许可:PyTorch (BSD)、Demucs (MIT,仅训练数据
+制备)、librosa (ISC)。

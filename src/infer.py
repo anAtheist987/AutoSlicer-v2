@@ -1,8 +1,10 @@
-"""End-to-end slicer: VOD (video or audio) -> song segments -> (optionally) cut video clips.
+"""End-to-end slicer: VOD (video / audio / bilibili URL) -> song segments -> cut clips.
 
 Usage:
   python src/infer.py --input vod.mp4 --checkpoint runs/crnn_a/best.pt --out-dir out/ \
       [--cut-video] [--gpu 0] [--device cpu]
+  python src/infer.py --input "https://www.bilibili.com/video/BV1xx411c7md" \
+      --checkpoint runs/v2_final/best.pt --out-dir out/ --cut-video
 
 Outputs:
   out/<stem>.segments.json   cut list with probabilities and timing
@@ -90,7 +92,8 @@ def cut_video(input_path: Path, segments: list[dict], out_dir: Path, stem: str) 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--input", required=True)
+    ap.add_argument("--input", required=True,
+                    help="local video/audio file, or a bilibili URL / BV id / b23.tv link")
     ap.add_argument("--checkpoint", required=True)
     ap.add_argument("--out-dir", default="out")
     ap.add_argument("--gpu", type=int, default=0)
@@ -98,6 +101,8 @@ def main():
     ap.add_argument("--cut-video", action="store_true")
     ap.add_argument("--on-threshold", type=float, default=None)
     ap.add_argument("--off-threshold", type=float, default=None)
+    ap.add_argument("--page", type=int, default=None, help="part number for bilibili multi-part VODs")
+    ap.add_argument("--cookie", default=None, help='bilibili "SESSDATA=..." for higher video quality')
     args = ap.parse_args()
 
     device = torch.device(args.device if args.device else f"cuda:{args.gpu}")
@@ -106,9 +111,16 @@ def main():
     model = build_model(model_name, **json.loads(ckpt["args"].get("model_kwargs", "{}")))
     model.load_state_dict(ckpt["model"])
 
-    inp = Path(args.input)
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    from bilibili import is_bilibili_input, download as bili_download
+    if is_bilibili_input(args.input):
+        # need the video stream only if we are cutting clips; audio is enough to detect
+        inp = bili_download(args.input, out_dir / "download", want_video=args.cut_video,
+                            page=args.page, cookie=args.cookie)
+        print(f"downloaded -> {inp}", flush=True)
+    else:
+        inp = Path(args.input)
 
     fcfg = FeatureConfig()
     t0 = time.time()
