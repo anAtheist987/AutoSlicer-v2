@@ -55,7 +55,12 @@ def predict_probs(wav: torch.Tensor, model: torch.nn.Module, device: torch.devic
             logits = model(mel)[0].float().cpu().numpy()
         o = int(s / hop / ratio)
         m = min(len(logits), n_out_total - o)
-        probs[o: o + m] += 1 / (1 + np.exp(-logits[:m]))
+        if logits.ndim == 2:  # multiclass head: P(class 1 = target singing)
+            e = np.exp(logits[:m] - logits[:m].max(-1, keepdims=True))
+            p = e[:, 1] / e.sum(-1)
+        else:
+            p = 1 / (1 + np.exp(-logits[:m]))
+        probs[o: o + m] += p
         weight[o: o + m] += 1
         if s + chunk >= len(wav):
             break

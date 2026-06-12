@@ -35,6 +35,9 @@ class WindowConfig:
     time_mask: int = 60
     n_masks: int = 2
     gain_jitter_db: float = 4.0
+    # bandwidth augmentation: simulate narrowband sources by killing high mel bands
+    bandlimit_prob: float = 0.0
+    bandlimit_min_band: int = 50
 
 
 class VODWindows(Dataset):
@@ -68,7 +71,10 @@ class VODWindows(Dataset):
                     [(int(s * cfg.out_fps), max(int(s * cfg.out_fps) + 1, int(e * cfg.out_fps)))
                      for s, e in focus])
             else:
-                d = np.diff(np.concatenate([[0], (lab > 0.5).astype(np.int8), [0]]))
+                # positive-crop centers = frames of class 1 exactly (works for binary
+                # labels too; multiclass values 2/3/4 must not count as positives)
+                is_pos = np.abs(lab - 1.0) < 0.25
+                d = np.diff(np.concatenate([[0], is_pos.astype(np.int8), [0]]))
                 starts, ends = np.flatnonzero(d == 1), np.flatnonzero(d == -1)
                 self.pos_regions.append(list(zip(starts, ends)))
         self.out_win = int(cfg.window_s * cfg.out_fps)
@@ -103,6 +109,9 @@ class VODWindows(Dataset):
     def _augment(self, mel: np.ndarray) -> np.ndarray:
         c = self.cfg
         mel = mel + np.float32(self.rng.uniform(-c.gain_jitter_db, c.gain_jitter_db) * np.log(10) / 20)
+        if c.bandlimit_prob > 0 and self.rng.random() < c.bandlimit_prob:
+            b = int(self.rng.integers(c.bandlimit_min_band, mel.shape[0]))
+            mel[b:] = mel.min()
         for _ in range(c.n_masks):
             f0 = self.rng.integers(0, mel.shape[0] - c.freq_mask)
             mel[f0: f0 + self.rng.integers(1, c.freq_mask + 1)] = mel.mean()

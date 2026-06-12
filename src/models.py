@@ -38,8 +38,10 @@ class MelCRNN(nn.Module):
     """
 
     def __init__(self, n_mels: int = 80, channels=(32, 64, 128, 256),
-                 rnn_hidden: int = 256, rnn_layers: int = 2, dropout: float = 0.2):
+                 rnn_hidden: int = 256, rnn_layers: int = 2, dropout: float = 0.2,
+                 n_out: int = 1):
         super().__init__()
+        self.n_out = n_out
         self.bn0 = nn.BatchNorm1d(n_mels)
         blocks, in_ch = [], 1
         for ch in channels:
@@ -51,7 +53,7 @@ class MelCRNN(nn.Module):
         self.rnn = nn.GRU(rnn_hidden, rnn_hidden // 2, num_layers=rnn_layers,
                           bidirectional=True, batch_first=True,
                           dropout=dropout if rnn_layers > 1 else 0.0)
-        self.head = nn.Sequential(nn.Dropout(dropout), nn.Linear(rnn_hidden, 1))
+        self.head = nn.Sequential(nn.Dropout(dropout), nn.Linear(rnn_hidden, n_out))
 
     def forward(self, mel: torch.Tensor) -> torch.Tensor:
         x = self.bn0(mel)[:, None]                  # [B, 1, F, T]
@@ -59,7 +61,8 @@ class MelCRNN(nn.Module):
         x = x.permute(0, 3, 1, 2).flatten(2)        # [B, T', C*F']
         x = self.proj(x)
         x, _ = self.rnn(x)
-        return self.head(x)[..., 0]                 # [B, T']
+        x = self.head(x)                            # [B, T', n_out]
+        return x[..., 0] if self.n_out == 1 else x
 
 
 class TCNBlock(nn.Module):

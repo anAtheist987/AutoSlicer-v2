@@ -25,6 +25,8 @@ def main():
     ap.add_argument('--gpu', type=int, required=True)
     ap.add_argument('--shard', type=int, default=0)
     ap.add_argument('--num-shards', type=int, default=1)
+    ap.add_argument('--src-dir', default='data/raw/data_8k', help='directory to scan for *.wav')
+    ap.add_argument('--out-name', default=None, help='stems subdir name; default = wav parent dir name')
     args = ap.parse_args()
     device = f'cuda:{args.gpu}'
 
@@ -33,12 +35,12 @@ def main():
     model = get_model('htdemucs').to(device).eval()
     vocals_idx = model.sources.index('vocals')
 
-    wavs = sorted((ROOT / 'data/raw/data_8k').rglob('*.wav'))
+    wavs = sorted((ROOT / args.src_dir).rglob('*.wav'))
     wavs = [w for i, w in enumerate(wavs) if i % args.num_shards == args.shard]
     print(f'shard {args.shard}: {len(wavs)} files', flush=True)
 
     for w in wavs:
-        streamer = w.parent.name
+        streamer = args.out_name or w.parent.name
         out_dir = ROOT / 'data/cache/stems' / streamer
         voc_p = out_dir / (w.stem + '.vocals.wav')
         acc_p = out_dir / (w.stem + '.accomp.wav')

@@ -61,7 +61,12 @@ def main():
                 with torch.autocast('cuda', dtype=torch.bfloat16):
                     logits = model(x)[0].float().cpu().numpy()
                 m = min(len(logits), b - a)
-                probs[a: a + m] += 1 / (1 + np.exp(-logits[:m]))
+                if logits.ndim == 2:  # multiclass: P(class 1)
+                    e = np.exp(logits[:m] - logits[:m].max(-1, keepdims=True))
+                    p = e[:, 1] / e.sum(-1)
+                else:
+                    p = 1 / (1 + np.exp(-logits[:m]))
+                probs[a: a + m] += p
                 weight[a: a + m] += 1
                 if b >= n_out:
                     break

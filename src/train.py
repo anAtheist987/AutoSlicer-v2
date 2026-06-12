@@ -40,9 +40,17 @@ def load_pairs(manifest: Path) -> list[tuple]:
     return [(Path(it["mel"]), Path(it["label"]), it.get("focus")) for it in items]
 
 
+def logits_to_probs(logits: np.ndarray, classes: int) -> np.ndarray:
+    """[T] sigmoid for binary; [T, C] -> softmax P(class 1 = 'A singing') for multiclass."""
+    if classes <= 1:
+        return 1 / (1 + np.exp(-logits))
+    e = np.exp(logits - logits.max(-1, keepdims=True))
+    return e[..., 1] / e.sum(-1)
+
+
 @torch.no_grad()
 def evaluate_full(model, pairs, device, out_fps=3.125, chunk_out=2048, overlap_out=128,
-                  input_type="mel") -> dict:
+                  input_type="mel", classes=1) -> dict:
     """Sliding full-VOD inference -> frame & event metrics aggregated over all val VODs."""
     model.eval()
     ratio = 16 if input_type == "mel" else 1
@@ -66,7 +74,7 @@ def evaluate_full(model, pairs, device, out_fps=3.125, chunk_out=2048, overlap_o
             with torch.autocast("cuda", dtype=torch.bfloat16):
                 logits = model(x)[0].float().cpu().numpy()
             m = min(len(logits), b - a)
-            probs[a: a + m] += 1 / (1 + np.exp(-logits[:m]))
+            probs[a: a + m] += logits_to_probs(logits[:m], classes)
             weight[a: a + m] += 1
             if b >= n_out:
                 break
@@ -120,6 +128,10 @@ def main():
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--model-kwargs", default="{}")
     ap.add_argument("--input-type", default="mel", choices=["mel", "emb"])
+    ap.add_argument("--classes", type=int, default=1,
+                    help=">1 enables multiclass head: labels are {-1 ignore, 0..C-1 full "
+                         "class, C 'not-class-1 but otherwise unknown'}; class 1 = A singing")
+    ap.add_argument("--bandlimit-prob", type=float, default=0.0)
     ap.add_argument("--out-fps", type=float, default=None,
                     help="label frame rate; default 3.125 for mel, 1.5625 for emb")
     args = ap.parse_args()
@@ -134,7 +146,7 @@ def main():
     (run_dir / "args.json").write_text(json.dumps(vars(args), indent=2))
 
     wcfg = WindowConfig(window_s=args.window_s, pos_fraction=args.pos_fraction,
-                        out_fps=args.out_fps)
+                        out_fps=args.out_fps, bandlimit_prob=args.bandlimit_prob)
     train_pairs = load_pairs(args.manifest)
     val_pairs = load_pairs(args.val_manifest)
     train_ds = VODWindows(train_pairs, wcfg, train=True, input_type=args.input_type,
@@ -143,7 +155,11 @@ def main():
                     drop_last=True, persistent_workers=args.num_workers > 0,
                     collate_fn=collate_numpy)
 
-    model = build_model(args.model, **json.loads(args.model_kwargs)).to(device)
+    mkw = json.loads(args.model_kwargs)
+    if args.classes > 1:
+        mkw.setdefault("n_out", args.classes)
+        args.model_kwargs = json.dumps(mkw)
+    model = build_model(args.model, **mkw).to(device)
     print(f"model={args.model} params={count_params(model)/1e6:.2f}M", flush=True)
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-2)
     sched = torch.optim.lr_scheduler.LambdaLR(
@@ -165,10 +181,28 @@ def main():
                 logits = model(mel)
                 n = min(logits.shape[1], y.shape[1])
                 yy = y[:, :n]
-                raw = torch.nn.functional.binary_cross_entropy_with_logits(
-                    logits[:, :n], yy.clamp(0, 1), reduction="none")
-                mask = (yy >= 0).float()  # -1 = ignore
-                loss = (raw * mask).sum() / mask.sum().clamp(1)
+                if args.classes <= 1:
+                    raw = torch.nn.functional.binary_cross_entropy_with_logits(
+                        logits[:, :n], yy.clamp(0, 1), reduction="none")
+                    mask = (yy >= 0).float()  # -1 = ignore
+                    loss = (raw * mask).sum() / mask.sum().clamp(1)
+                else:
+                    lg = logits[:, :n].float()
+                    yl = yy.long()
+                    ls = torch.log_softmax(lg, -1)
+                    full = (yl >= 0) & (yl < args.classes)
+                    not_a = yl == args.classes  # "not A singing, fine-class unknown"
+                    loss_terms = []
+                    if full.any():
+                        loss_terms.append(torch.nn.functional.nll_loss(
+                            ls[full], yl[full], reduction="sum"))
+                    if not_a.any():
+                        # penalize only P(class 1): -log(1 - p1) = -logsumexp(others) + logsumexp(all)
+                        others = torch.cat([lg[..., :1], lg[..., 2:]], -1)
+                        log_not1 = torch.logsumexp(others, -1) - torch.logsumexp(lg, -1)
+                        loss_terms.append(-(log_not1[not_a]).sum())
+                    denom = (full.sum() + not_a.sum()).clamp(1).float()
+                    loss = sum(loss_terms) / denom
             opt.zero_grad(set_to_none=True)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 5.0)
@@ -183,7 +217,7 @@ def main():
                       f"({(time.time()-t0)/step:.2f}s/step)", flush=True)
             if step % args.val_every == 0 or step == args.steps:
                 m = evaluate_full(model, val_pairs, device, out_fps=args.out_fps,
-                                  input_type=args.input_type)
+                                  input_type=args.input_type, classes=args.classes)
                 for k, v in m.items():
                     if isinstance(v, (int, float)) and v is not None:
                         writer.add_scalar(f"val/{k}", v, step)
