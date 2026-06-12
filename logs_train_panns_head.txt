@@ -40,3 +40,26 @@ step 6000/10000 loss 0.0000 (0.61s/step)
 step 6200/10000 loss 0.0010 (0.61s/step)
 step 6400/10000 loss 0.0000 (0.61s/step)
 step 6600/10000 loss 0.0000 (0.61s/step)
+step 6800/10000 loss 0.0000 (0.61s/step)
+step 7000/10000 loss 0.0002 (0.61s/step)
+[val @7000] frame_f1=0.9002 event_f1=0.8182 P/R=0.994/0.823 score=0.8592
+  new best score=0.8592
+step 7200/10000 loss 0.0003 (0.61s/step)
+step 7400/10000 loss 0.0000 (0.61s/step)
+step 7600/10000 loss 0.0001 (0.61s/step)
+step 7800/10000 loss 0.0000 (0.61s/step)
+step 8000/10000 loss 0.0000 (0.61s/step)
+[val @8000] frame_f1=0.7498 event_f1=0.6667 P/R=1.000/0.600 score=0.7082
+step 8200/10000 loss 0.0000 (0.61s/step)
+step 8400/10000 loss 0.0000 (0.61s/step)
+step 8600/10000 loss 0.0001 (0.61s/step)
+step 8800/10000 loss 0.0001 (0.61s/step)
+step 9000/10000 loss 0.0000 (0.61s/step)
+[val @9000] frame_f1=0.7757 event_f1=0.7000 P/R=1.000/0.634 score=0.7378
+step 9200/10000 loss 0.0000 (0.61s/step)
+step 9400/10000 loss 0.0000 (0.61s/step)
+step 9600/10000 loss 0.0000 (0.61s/step)
+step 9800/10000 loss 0.0011 (0.61s/step)
+step 10000/10000 loss 0.0000 (0.61s/step)
+[val @10000] frame_f1=0.8626 event_f1=0.7907 P/R=1.000/0.759 score=0.8267
+DONE best_score=0.8592

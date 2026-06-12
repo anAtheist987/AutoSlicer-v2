@@ -12,3 +12,6 @@ __pycache__/
 *.pth
 *.pkl
 .venv/
+out/
+logs_*.txt
+*.log

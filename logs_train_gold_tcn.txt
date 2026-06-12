@@ -1,2 +1,57 @@
 model=tcn params=3.87M
 step 200/8000 loss 0.1721 (0.33s/step)
+step 400/8000 loss 0.2149 (0.33s/step)
+step 600/8000 loss 0.3171 (0.33s/step)
+step 800/8000 loss 0.2165 (0.32s/step)
+step 1000/8000 loss 0.1558 (0.31s/step)
+[val @1000] frame_f1=0.4074 event_f1=0.0870 P/R=0.421/0.394 score=0.2472
+  new best score=0.2472
+step 1200/8000 loss 0.1644 (0.31s/step)
+step 1400/8000 loss 0.1745 (0.31s/step)
+step 1600/8000 loss 0.0598 (0.31s/step)
+step 1800/8000 loss 0.2251 (0.31s/step)
+step 2000/8000 loss 0.0977 (0.31s/step)
+[val @2000] frame_f1=0.5878 event_f1=0.4928 P/R=0.847/0.450 score=0.5403
+  new best score=0.5403
+step 2200/8000 loss 0.0926 (0.31s/step)
+step 2400/8000 loss 0.1088 (0.31s/step)
+step 2600/8000 loss 0.1231 (0.31s/step)
+step 2800/8000 loss 0.4949 (0.31s/step)
+step 3000/8000 loss 0.0793 (0.31s/step)
+[val @3000] frame_f1=0.7637 event_f1=0.6087 P/R=0.894/0.667 score=0.6862
+  new best score=0.6862
+step 3200/8000 loss 0.1258 (0.31s/step)
+step 3400/8000 loss 0.0191 (0.31s/step)
+step 3600/8000 loss 0.0447 (0.31s/step)
+step 3800/8000 loss 0.0688 (0.31s/step)
+step 4000/8000 loss 0.0703 (0.31s/step)
+[val @4000] frame_f1=0.7985 event_f1=0.6479 P/R=0.939/0.695 score=0.7232
+  new best score=0.7232
+step 4200/8000 loss 0.1924 (0.31s/step)
+step 4400/8000 loss 0.0557 (0.31s/step)
+step 4600/8000 loss 0.0428 (0.31s/step)
+step 4800/8000 loss 0.0842 (0.31s/step)
+step 5000/8000 loss 0.0093 (0.31s/step)
+[val @5000] frame_f1=0.8354 event_f1=0.7273 P/R=0.901/0.779 score=0.7813
+  new best score=0.7813
+step 5200/8000 loss 0.1849 (0.31s/step)
+step 5400/8000 loss 0.0197 (0.31s/step)
+step 5600/8000 loss 0.0060 (0.31s/step)
+step 5800/8000 loss 0.0600 (0.31s/step)
+step 6000/8000 loss 0.0175 (0.31s/step)
+[val @6000] frame_f1=0.8673 event_f1=0.7429 P/R=0.945/0.801 score=0.8051
+  new best score=0.8051
+step 6200/8000 loss 0.0194 (0.31s/step)
+step 6400/8000 loss 0.0126 (0.31s/step)
+step 6600/8000 loss 0.0011 (0.30s/step)
+step 6800/8000 loss 0.0167 (0.30s/step)
+step 7000/8000 loss 0.0152 (0.30s/step)
+[val @7000] frame_f1=0.8570 event_f1=0.8169 P/R=0.974/0.765 score=0.8370
+  new best score=0.8370
+step 7200/8000 loss 0.0101 (0.30s/step)
+step 7400/8000 loss 0.0456 (0.30s/step)
+step 7600/8000 loss 0.0815 (0.30s/step)
+step 7800/8000 loss 0.1328 (0.30s/step)
+step 8000/8000 loss 0.0565 (0.30s/step)
+[val @8000] frame_f1=0.8295 event_f1=0.7397 P/R=0.984/0.717 score=0.7846
+DONE best_score=0.8370
